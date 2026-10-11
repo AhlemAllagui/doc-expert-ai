@@ -1,5 +1,22 @@
 ```vue
 <script setup>
+import { ref } from 'vue'
+
+const selectedFile = ref(null)
+const question = ref('')
+const message = ref('')
+
+function handleFileChange(event) {
+  selectedFile.value = event.target.files[0] || null
+  message.value = ''
+}
+
+function askQuestion() {
+  if (!selectedFile.value || !question.value.trim()) return
+
+  message.value =
+    "L'analyse IA sera disponible lorsque le backend Flask sera connecté."
+}
 </script>
 
 <template>
@@ -30,25 +47,41 @@
 
           <p>ou choisissez un fichier depuis votre ordinateur</p>
 
-          <button class="upload-button">
+          <input
+            id="file-input"
+            type="file"
+            accept=".pdf,.txt,.doc,.docx"
+            hidden
+            @change="handleFileChange"
+          />
+
+          <label for="file-input" class="upload-button">
             Choisir un fichier
-          </button>
+          </label>
+
+          <p v-if="selectedFile" class="file-selected">
+            Fichier sélectionné : {{ selectedFile.name }}
+          </p>
         </div>
       </section>
 
       <section class="documents-section">
         <h2>Mes documents</h2>
 
-        <div class="document-card">
+        <div v-if="selectedFile" class="document-card">
           <span class="file-icon">📄</span>
 
           <div class="document-info">
-            <strong>test.txt</strong>
-            <span>Document ajouté</span>
+            <strong>{{ selectedFile.name }}</strong>
+            <span>Fichier sélectionné sur votre ordinateur</span>
           </div>
 
           <span class="status">✓</span>
         </div>
+
+        <p v-else class="empty-state">
+          Aucun document sélectionné pour le moment.
+        </p>
       </section>
 
       <section class="question-section">
@@ -56,16 +89,34 @@
 
         <div class="question-box">
           <input
+            v-model="question"
             type="text"
             placeholder="Posez une question à votre document..."
+            @keyup.enter="askQuestion"
           />
 
-          <button class="question-button">
+          <button
+            class="question-button"
+            :disabled="!selectedFile || !question.trim()"
+            @click="askQuestion"
+          >
             Demander
           </button>
         </div>
+
+        <p v-if="message" class="message">
+          {{ message }}
+        </p>
+
+        <p v-else class="helper-text">
+          Sélectionnez un document pour préparer votre question.
+        </p>
       </section>
     </main>
+
+    <footer class="footer">
+      Doc Expert AI · Projet en cours de développement
+    </footer>
   </div>
 </template>
 
@@ -105,6 +156,7 @@
 }
 
 .main {
+  width: 100%;
   max-width: 900px;
   margin: 50px auto;
   padding: 0 20px;
@@ -115,13 +167,14 @@
 }
 
 .upload-section h1 {
-  font-size: 36px;
   margin-bottom: 10px;
+  font-size: 36px;
 }
 
 .description {
-  color: #6b7280;
   margin-bottom: 30px;
+  color: #6b7280;
+  line-height: 1.6;
 }
 
 .upload-box {
@@ -141,20 +194,33 @@
 
 .upload-box p {
   color: #6b7280;
-}
-
-button {
-  border: none;
-  border-radius: 8px;
-  padding: 12px 20px;
-  font-size: 15px;
-  cursor: pointer;
+  overflow-wrap: anywhere;
 }
 
 .upload-button,
 .question-button {
+  display: inline-block;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
   background: #111827;
   color: white;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.upload-button {
+  margin-top: 12px;
+}
+
+.upload-button:hover,
+.question-button:hover:not(:disabled) {
+  background: #374151;
+}
+
+.file-selected {
+  margin-top: 18px;
 }
 
 .documents-section,
@@ -183,8 +249,10 @@ button {
 
 .document-info {
   display: flex;
-  flex-direction: column;
   flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .document-info span {
@@ -194,7 +262,16 @@ button {
 }
 
 .status {
+  color: #16a34a;
   font-size: 20px;
+}
+
+.empty-state,
+.helper-text,
+.message {
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 .question-box {
@@ -204,10 +281,67 @@ button {
 
 .question-box input {
   flex: 1;
+  min-width: 0;
   padding: 14px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   font-size: 15px;
+}
+
+.question-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.helper-text,
+.message {
+  margin-top: 12px;
+}
+
+.message {
+  color: #374151;
+}
+
+.footer {
+  padding: 25px 20px;
+  color: #6b7280;
+  font-size: 13px;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .header {
+    padding: 24px 20px;
+  }
+
+  .logo {
+    font-size: 21px;
+  }
+
+  .subtitle {
+    margin-left: 0;
+  }
+
+  .main {
+    margin: 35px auto;
+  }
+
+  .upload-section h1 {
+    font-size: 28px;
+  }
+
+  .upload-box {
+    padding: 35px 18px;
+  }
+
+  .question-box {
+    flex-direction: column;
+  }
+
+  .question-box input,
+  .question-button {
+    width: 100%;
+  }
 }
 </style>
 ```
